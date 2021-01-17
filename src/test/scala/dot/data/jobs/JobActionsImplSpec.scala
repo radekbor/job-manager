@@ -34,7 +34,7 @@ class JobActionsImplSpec
       val jobActions =
         JobsActionsImpl(jobManager, finishedJobsQueue, jobFactory)
 
-      jobActions.submit(Input.Submit("1", 1)).futureValue
+      jobActions.submit(Input.Submit("1", 1))
 
       jobFactoryProbe.expectMsgPF() {
         case JobFactory.CreateJob(_, 1) => 1

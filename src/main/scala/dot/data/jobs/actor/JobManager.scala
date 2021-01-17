@@ -45,16 +45,16 @@ class JobManager extends Actor {
       }
 
     case JobManager.WorkerIsReadyToTakeJob(isNew) =>
-      val newWorkingCount = if (isNew) {
-        working
-      } else {
-        working - 1
-      }
       queue.headOption match {
         case Some(job) =>
           context.sender() ! Worker.Start(job.jobActor)
-          context.become(onMessage(queue.tail, newWorkingCount, waitingWorkers))
+          context.become(onMessage(queue.tail, working, waitingWorkers))
         case None =>
+          val newWorkingCount = if (isNew) {
+            working
+          } else {
+            working - 1
+          }
           context.become(
             onMessage(queue, newWorkingCount, context.sender() :: waitingWorkers)
           )

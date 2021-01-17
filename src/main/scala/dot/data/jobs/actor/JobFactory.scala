@@ -33,11 +33,16 @@ class JobFactory(jobsManager: ActorRef, finishedJobsQueue: ActorRef)
       }
 
     case CreateJob(jobId, priority) =>
-      val job = context.actorOf(
-        Props(new Job(jobId, finishedJobsQueue)),
-        jobName(jobId)
-      )
-      jobsManager ! JobManager.SubmitJob(priority, job)
+      if (context.child(jobName(jobId)).isDefined) {
+        sender() ! false
+      } else {
+        val job = context.actorOf(
+          Props(new Job(jobId, finishedJobsQueue)),
+          jobName(jobId)
+        )
+        jobsManager ! JobManager.SubmitJob(priority, job)
+        sender() ! true
+      }
 
     case GetStatus(jobId) =>
       context.child(jobName(jobId)) match {

@@ -168,7 +168,7 @@ class JobsRoutesSpec extends AnyWordSpec with Matchers with ScalatestRouteTest {
   }
 
   class JobsActionsMock extends JobsActions {
-    override def submit(submit: Input.Submit): Future[Unit] = Future.unit
+    override def submit(submit: Input.Submit): Future[Boolean] = Future.successful(true)
 
     override def finish(
       finish: Input.Finish

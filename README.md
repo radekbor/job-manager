@@ -27,7 +27,7 @@ Currently there are two environment variables
 
 
 
-## How actors works
+## How actors works 
 
 1) So every time we submit job JobFactory create JobActor and send it to JobQueue
 
@@ -40,3 +40,10 @@ Currently there are two environment variables
    - Send message to FinishedJobQueue that job has been finished
 
 4) Job is capable to destroy when FinishedJobQueue wants ask
+
+## TBD
+
+- [ ] - test retention
+- [ ] - write more test for running count
+- [ ] - improve job name encoding
+- [ ] - error messages

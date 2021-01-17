@@ -10,7 +10,7 @@ import dot.data.jobs.actor.{FinishedJobsQueue, Job, JobFactory, JobManager}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait JobsActions {
-  def submit(submit: Input.Submit): Future[Unit]
+  def submit(submit: Input.Submit): Future[Boolean]
 
   def finish(finish: Finish): Future[Either[FinalActionError, Unit]]
 
@@ -25,9 +25,9 @@ case class JobsActionsImpl(
 )(implicit ec: ExecutionContext, timeout: Timeout)
     extends JobsActions {
 
-  def submit(submit: Input.Submit): Future[Unit] = Future {
-    jobFactory ! CreateJob(JobId(submit.jobId), submit.priority)
-  }
+  def submit(submit: Input.Submit): Future[Boolean] =
+    (jobFactory ? CreateJob(JobId(submit.jobId), submit.priority))
+      .mapTo[Boolean]
 
   def finish(finish: Finish): Future[Either[FinalActionError, Unit]] = {
     val jobId = JobId(finish.jobId)

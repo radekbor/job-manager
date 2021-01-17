@@ -25,7 +25,8 @@ object JobsRoutes {
           path("submited") {
             submitFromBody { submitRequest =>
               onSuccess(jobsActions.submit(submitRequest)) {
-                complete(Accepted)
+                case true => complete(Accepted)
+                case false => complete(BadRequest)
               }
             }
           }
