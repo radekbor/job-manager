@@ -10,7 +10,7 @@ object JobManager {
 
   case class SubmitJob(priority: Int, jobActor: ActorRef)
 
-  case object WorkerIsReadyToTakeJob
+  case class WorkerIsReadyToTakeJob(newWorker: Boolean)
 
   case object CountPendingAndRunning
 
@@ -44,14 +44,19 @@ class JobManager extends Actor {
           context.become(onMessage(queue + submitJob, working, Nil))
       }
 
-    case JobManager.WorkerIsReadyToTakeJob =>
+    case JobManager.WorkerIsReadyToTakeJob(isNew) =>
+      val newWorkingCount = if (isNew) {
+        working
+      } else {
+        working - 1
+      }
       queue.headOption match {
         case Some(job) =>
           context.sender() ! Worker.Start(job.jobActor)
-          context.become(onMessage(queue.tail, working - 1, waitingWorkers))
+          context.become(onMessage(queue.tail, newWorkingCount, waitingWorkers))
         case None =>
           context.become(
-            onMessage(queue, working, context.sender() :: waitingWorkers)
+            onMessage(queue, newWorkingCount, context.sender() :: waitingWorkers)
           )
       }
 

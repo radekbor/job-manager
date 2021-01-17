@@ -1,6 +1,6 @@
 name := "jobs"
 
-version := "0.2"
+version := "0.3"
 
 scalaVersion := "2.13.4"
 
@@ -15,6 +15,9 @@ lazy val Versions = new {
   val circe = "0.13.0"
   val enumeratum = "1.6.1"
   val scalatest = "3.2.2"
+
+  val log4s               = "1.10.0-M4"
+  val log4j2              = "2.10.0"
 }
 
 libraryDependencies ++= Seq(
@@ -35,10 +38,16 @@ libraryDependencies ++= Seq(
 
   "com.beachape"               %% "enumeratum" % Versions.enumeratum,
 
-"com.typesafe.akka"   %% "akka-testkit"             % Versions.akka          % Test,
-"com.typesafe.akka"   %% "akka-stream-testkit"      % Versions.akka          % Test,
-"com.typesafe.akka"   %% "akka-http-testkit"        % Versions.akkaHttp      % Test,
-"org.scalatest"       %% "scalatest"                % Versions.scalatest     % Test,
+  "com.typesafe.akka"   %% "akka-testkit"             % Versions.akka          % Test,
+  "com.typesafe.akka"   %% "akka-stream-testkit"      % Versions.akka          % Test,
+  "com.typesafe.akka"   %% "akka-http-testkit"        % Versions.akkaHttp      % Test,
+  "org.scalatest"       %% "scalatest"                % Versions.scalatest     % Test,
+
+  "org.log4s"                %% "log4s"           % Versions.log4s,
+  "org.apache.logging.log4j" % "log4j-api"        % Versions.log4j2,
+  "org.apache.logging.log4j" % "log4j-jul"        % Versions.log4j2,
+  "org.apache.logging.log4j" % "log4j-core"       % Versions.log4j2,
+  "org.apache.logging.log4j" % "log4j-slf4j-impl" % Versions.log4j2
 )
 
 scalacOptions ++= Seq(
@@ -52,7 +61,5 @@ scalacOptions ++= Seq(
   "-language:existentials",
   "-language:postfixOps"
 )
-
-dockerExposedPorts ++= Seq(8000, 8000)
 
 packageName in Docker := "dotdata/" +  packageName.value

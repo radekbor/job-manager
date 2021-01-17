@@ -12,6 +12,9 @@ How to build docker image
 ```shell
 sbt docker:publishLocal
 ```
+
+
+
 This command will build docker image with name: dotdata/jobs
 
 ## Customization
@@ -21,7 +24,6 @@ Currently there are two environment variables
 ```NUMBER_OF_NODES``` with default value: 10
 
 ```MAX_NUMBER_OF_RETAINED_FINISHED_JOBS```: 120
-
 
 
 

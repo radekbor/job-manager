@@ -1,7 +1,7 @@
 package dot.data.jobs.actor
 
 import akka.actor.{Actor, ActorRef}
-import akka.event.Logging
+import org.log4s.{Logger, getLogger}
 
 object Worker {
 
@@ -13,15 +13,17 @@ object Worker {
 
 class Worker(workerId: Int, jobManager: ActorRef) extends Actor {
 
-  private val log = Logging(context.system, this)
+  jobManager ! JobManager.WorkerIsReadyToTakeJob(true)
+
+  private val logger: Logger = getLogger
 
   override def receive: Receive = onMessage
 
   private def onMessage: Receive = {
 
     case Worker.Release =>
-      log.debug(s"Worker $workerId released")
-      jobManager ! JobManager.WorkerIsReadyToTakeJob
+      logger.info(s"Worker $workerId released")
+      jobManager ! JobManager.WorkerIsReadyToTakeJob(false)
 
     case Worker.Start(job) =>
       job ! Job.Start

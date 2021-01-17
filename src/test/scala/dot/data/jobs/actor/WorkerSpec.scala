@@ -27,7 +27,9 @@ class WorkerSpec
 
     "notify job when started" in {
       val worker = createWorker(1)
-
+      jobManager.expectMsgAllOf(
+        JobManager.WorkerIsReadyToTakeJob(true),
+      )
       worker ! Worker.Start(job.ref)
 
       job.expectMsgPF() {
@@ -40,9 +42,10 @@ class WorkerSpec
 
       worker ! Worker.Release
 
-      jobManager.expectMsgPF() {
-        case JobManager.WorkerIsReadyToTakeJob =>
-      }
+      jobManager.expectMsgAllOf(
+        JobManager.WorkerIsReadyToTakeJob(true),
+        JobManager.WorkerIsReadyToTakeJob(false)
+      )
     }
 
   }

@@ -19,7 +19,7 @@ object JobFactory {
 
 }
 
-class JobFactory(jobQueue: ActorRef, finishedJobsQueue: ActorRef)
+class JobFactory(jobsManager: ActorRef, finishedJobsQueue: ActorRef)
     extends Actor {
   private implicit val timeout: Timeout = 5.seconds
   private implicit val executionContext = Materializer(context.system).executionContext
@@ -37,7 +37,7 @@ class JobFactory(jobQueue: ActorRef, finishedJobsQueue: ActorRef)
         Props(new Job(jobId, finishedJobsQueue)),
         jobName(jobId)
       )
-      jobQueue ! JobManager.SubmitJob(priority, job)
+      jobsManager ! JobManager.SubmitJob(priority, job)
 
     case GetStatus(jobId) =>
       context.child(jobName(jobId)) match {

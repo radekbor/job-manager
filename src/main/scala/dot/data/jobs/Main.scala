@@ -1,53 +1,86 @@
 package dot.data.jobs
 
-import akka.actor.{ActorSystem, Props}
+import akka.Done
+import akka.actor.{ActorSystem, Props, Terminated}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.Http.ServerBinding
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import dot.data.jobs.actor.{FinishedJobsQueue, JobFactory, JobManager, Worker}
+import org.log4s.{Logger, getLogger}
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.io.StdIn
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
-object Main extends App {
+object Main {
   private implicit val system = ActorSystem("my-system")
 
+  private val logger: Logger = getLogger
   private val config = system.settings.config
-
-  private val NUMBER_OF_NODES = config.getInt("app.number_of_nodes")
-  private val MAX_NUMBER_OF_RETAINED_FINISHED_JOBS =
-    config.getInt("app.max_number_of_retained_finished_jobs")
-
-  println(
-    s"configuration: NUMBER_OF_NODES: $NUMBER_OF_NODES, MAX_NUMBER_OF_RETAINED_FINISHED_JOBS: $MAX_NUMBER_OF_RETAINED_FINISHED_JOBS"
-  )
+  private val port = 8080
 
   private implicit val timeout: Timeout = 10.seconds
   private implicit val executionContext: ExecutionContext =
     ExecutionContext.global
 
-  val finishedJobsQueue = system.actorOf(
-    Props(new FinishedJobsQueue(MAX_NUMBER_OF_RETAINED_FINISHED_JOBS)),
-    "finishedJobsQueue"
-  )
-  val jobManager = system.actorOf(Props(new JobManager), "jobQueue")
+  private val NUMBER_OF_NODES = config.getInt("app.number_of_nodes")
+  private val MAX_NUMBER_OF_RETAINED_FINISHED_JOBS =
+    config.getInt("app.max_number_of_retained_finished_jobs")
 
-  val jobFactory = system.actorOf(
-    Props(new JobFactory(jobManager, finishedJobsQueue)),
-    "jobFactory"
+  logger.info(
+    s"configuration: NUMBER_OF_NODES: $NUMBER_OF_NODES, MAX_NUMBER_OF_RETAINED_FINISHED_JOBS: $MAX_NUMBER_OF_RETAINED_FINISHED_JOBS"
   )
-  val workers = Range(0, NUMBER_OF_NODES).map(
-    id => system.actorOf(Props(new Worker(id, jobManager)), "worker_" + id)
-  )
-  val jobsActions = JobsActionsImpl(jobManager, finishedJobsQueue, jobFactory)
-  val bindingFuture =
-    Http().newServerAt("localhost", 8080).bind(JobsRoutes.routes(jobsActions))
 
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  StdIn.readLine() // let it run until user presses return
-  bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ => system.terminate()) // and shutdown when done
+  def main(array: Array[String]): Unit = {
+    val finishedJobsQueue = system.actorOf(
+      Props(new FinishedJobsQueue(MAX_NUMBER_OF_RETAINED_FINISHED_JOBS)),
+      "finishedJobsQueue"
+    )
+    val jobManager = system.actorOf(Props(new JobManager), "jobQueue")
+
+    val jobFactory = system.actorOf(
+      Props(new JobFactory(jobManager, finishedJobsQueue)),
+      "jobFactory"
+    )
+    Range(0, NUMBER_OF_NODES).foreach(
+      id => {
+        system.actorOf(Props(new Worker(id, jobManager)), "worker_" + id)
+      }
+    )
+    val jobsActions = JobsActionsImpl(jobManager, finishedJobsQueue, jobFactory)
+
+    val serverBinding =
+      Http().newServerAt("0.0.0.0", port).bind(JobsRoutes.routes(jobsActions))
+
+    serverBinding.onComplete {
+      case Success(binding) =>
+        logger.info(s"Server started on $port")
+        sys.addShutdownHook(shutdownBinding(binding))
+
+      case Failure(e) =>
+        logger.error(s"Failed to start server on $port - ${e.getMessage}")
+        shutdownSystem()
+    }
+  }
+
+
+
+  private val shutdownSystem: () => Future[Terminated] =
+    () =>
+      system
+        .terminate()
+        .andThen { case attempt => logger.info(s"Attempted to stop ActorSystem - $attempt") }
+
+  private val shutdownBinding: ServerBinding => Future[Done] = _.unbind()
+    .andThen {
+      case Success(_) =>
+        logger.info("Server stopped")
+        shutdownSystem()
+
+      case Failure(e) =>
+        logger.error(s"Failed to stop the server - ${e.getMessage}")
+    }
+
+
 
 }

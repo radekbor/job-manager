@@ -48,13 +48,13 @@ class JobManagerSpec
       jobManager ! JobManager.SubmitJob(3, job3)
       jobManager ! JobManager.SubmitJob(2, job2)
 
-      val res1 = (jobManager ? JobManager.WorkerIsReadyToTakeJob)
+      val res1 = (jobManager ? JobManager.WorkerIsReadyToTakeJob(false))
         .mapTo[Worker.Start]
         .futureValue
 
       res1 should be(Worker.Start(job3))
 
-      val res2 = (jobManager ? JobManager.WorkerIsReadyToTakeJob)
+      val res2 = (jobManager ? JobManager.WorkerIsReadyToTakeJob(false))
         .mapTo[Worker.Start]
         .futureValue
 
@@ -67,8 +67,8 @@ class JobManagerSpec
       val job1 = system.actorOf(Props.empty)
       val job2 = system.actorOf(Props.empty)
 
-      jobManager.tell(JobManager.WorkerIsReadyToTakeJob, workerProbe1.ref)
-      jobManager.tell(JobManager.WorkerIsReadyToTakeJob, workerProbe2.ref)
+      jobManager.tell(JobManager.WorkerIsReadyToTakeJob(true), workerProbe1.ref)
+      jobManager.tell(JobManager.WorkerIsReadyToTakeJob(true), workerProbe2.ref)
 
       (jobManager ? CountPendingAndRunning)
         .mapTo[PendingAndRunningCount]
@@ -105,8 +105,8 @@ class JobManagerSpec
       val job1 = system.actorOf(Props.empty)
       val job2 = system.actorOf(Props.empty)
 
-      jobManager.tell(JobManager.WorkerIsReadyToTakeJob, workerProbe1.ref)
-      jobManager.tell(JobManager.WorkerIsReadyToTakeJob, workerProbe2.ref)
+      jobManager.tell(JobManager.WorkerIsReadyToTakeJob(true), workerProbe1.ref)
+      jobManager.tell(JobManager.WorkerIsReadyToTakeJob(true), workerProbe2.ref)
 
       jobManager ! JobManager.SubmitJob(1, job1)
       jobManager ! JobManager.SubmitJob(1, job2)
