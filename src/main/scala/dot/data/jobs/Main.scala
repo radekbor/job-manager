@@ -3,6 +3,7 @@ package dot.data.jobs
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import dot.data.jobs.actor.{FinishedJobsQueue, JobFactory, JobManager, Worker}
 
 import scala.concurrent.ExecutionContext
@@ -11,8 +12,16 @@ import scala.io.StdIn
 
 object Main extends App {
   private implicit val system = ActorSystem("my-system")
-  private val NUMBER_OF_NODES = 2;
-  private val MAX_NUMBER_OF_RETAINED_FINISHED_JOBS = 10;
+
+  private val config = system.settings.config
+
+  private val NUMBER_OF_NODES = config.getInt("app.number_of_nodes")
+  private val MAX_NUMBER_OF_RETAINED_FINISHED_JOBS =
+    config.getInt("app.max_number_of_retained_finished_jobs")
+
+  println(
+    s"configuration: NUMBER_OF_NODES: $NUMBER_OF_NODES, MAX_NUMBER_OF_RETAINED_FINISHED_JOBS: $MAX_NUMBER_OF_RETAINED_FINISHED_JOBS"
+  )
 
   private implicit val timeout: Timeout = 10.seconds
   private implicit val executionContext: ExecutionContext =

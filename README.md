@@ -3,13 +3,24 @@
 
 ## How to run 
 
-How to run directly using sbt
-```sbt```
+How to run directly using sbt:
+```shel
+sbt run
+```
  
 How to build docker image
-```sbt docker:publishLocal```
+```shell
+sbt docker:publishLocal
+```
 This command will build docker image with name: dotdata/jobs
 
+## Customization
+
+Currently there are two environment variables 
+
+```NUMBER_OF_NODES``` with default value: 10
+
+```MAX_NUMBER_OF_RETAINED_FINISHED_JOBS```: 120
 
 
 
