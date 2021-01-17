@@ -7,10 +7,16 @@ How to run directly using sbt:
 ```shel
 sbt run
 ```
- 
-How to build docker image
+*** Application was run and compiled using: openjdk 11.0.8 2020-07-14
+
+How to build docker image:
 ```shell
 sbt docker:publishLocal
+```
+
+And then:
+```shell script
+docker run -p 8080:8080 --env NUMBER_OF_NODES=2 --env MAX_NUMBERF_RETAINED_FINISHED_JOBS=5 dotdata/jobs:
 ```
 
 
@@ -43,7 +49,8 @@ Currently there are two environment variables
 
 ## TBD
 
-- [ ] - test retention
+- [ ] - check if job is running when finish
+- [ ] - write more tests retention
 - [ ] - write more test for running count
 - [ ] - improve job name encoding
 - [ ] - error messages
