@@ -35,22 +35,28 @@ Currently there are two environment variables
 
 ## How actors works 
 
-1) So every time we submit job JobFactory create JobActor and send it to JobQueue
+1) Workers asks JobQueue for a job:
+    - if there is a to job be done, worker receives it
+    - otherwise worker is being added to waitingWorkers   
 
-2) Workers asks JobQueue for a job:
-    - if there is a job be done worker receives it
-    - otherwise worker is being added to waitingWorkers
-    
+2) Every time we submit job JobFactory create JobActor and send it to JobQueue
+    - if there is a waiting worker (it means that there is no jobs in the queue),
+    we send that job to that worker
+    - if there are no waiting workers we add job to a queue
+   
 3) Job is capable to handle finish message and then:
    - Ask worker to release (and to WaitingWorkers)
    - Send message to FinishedJobQueue that job has been finished
 
 4) Job is capable to destroy when FinishedJobQueue wants ask
 
+5) Worker receives Release message and then add themself to waitingWorkersQueue (By sending message to Jobmanager)
+
 ## TBD
 
-- [ ] - check if job is running when finish
-- [ ] - write more tests retention
-- [ ] - write more test for running count
-- [ ] - improve job name encoding
-- [ ] - error messages
+- [ ] check if job is running when finish(right now user doesn't know if finish action is ignored or nnot)
+- [ ] improve logs,
+- [ ] write more tests retention
+- [ ] write more test for running count
+- [ ] improve job name encoding
+- [ ] error messages
